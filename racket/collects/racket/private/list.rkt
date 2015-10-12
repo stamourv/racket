@@ -2,7 +2,7 @@
   ;; this module should not be required directly
   ;; require the `list` submodule of racket/private/base instead
 
-  (require "reverse.rkt")
+  (require (rename-in "reverse.rkt" [alt-reverse reverse]))
 
   (provide foldl
            foldr
@@ -30,7 +30,7 @@
            build-string
            build-list
 
-           (rename-out [alt-reverse reverse])
+           reverse
 
            compose
            compose1)
