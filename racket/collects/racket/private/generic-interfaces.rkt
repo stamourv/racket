@@ -1,4 +1,6 @@
 (module generic-interfaces "pre-base.rkt"
+  ;; this module should not be required directly
+  ;; require the `generic-interfaces` submodule of racket/private/base instead
 
   ;; Defines (forgeries of) generic interfaces that correspond to struct
   ;; properties that come from racket/base.

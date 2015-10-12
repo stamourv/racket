@@ -1,4 +1,6 @@
 (module base "pre-base.rkt"
+  ;; this module should not be required directly
+  ;; require the `cert` submodule of racket/private/base instead
 
   ;; Backward compatibility
   (#%provide syntax-recertify

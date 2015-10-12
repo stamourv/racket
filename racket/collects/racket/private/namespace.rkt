@@ -1,4 +1,7 @@
 (module namespace "pre-base.rkt"
+  ;; this module should not be required directly
+  ;; require the `namespace` submodule of racket/private/base instead
+
   (require (for-syntax '#%kernel "define.rkt"
                        "member.rkt"
                        "stx.rkt" "stxcase-scheme.rkt" "small-scheme.rkt" 

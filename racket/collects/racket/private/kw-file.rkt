@@ -1,4 +1,6 @@
-(module kw-file "pre-base.rkt" 
+(module kw-file "pre-base.rkt"
+  ;; this module should not be required directly
+  ;; require the `kw-file` submodule of racket/private/base instead
 
   (require (prefix-in k: "pre-base.rkt")
            "sort.rkt")

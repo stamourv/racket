@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require racket/private/dict
-         (only-in racket/private/hash paired-fold)
+         (only-in (submod racket/private/base hash) paired-fold)
          (only-in racket/syntax format-symbol)
          (for-syntax racket/base racket/syntax))
 

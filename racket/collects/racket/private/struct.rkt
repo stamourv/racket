@@ -1,5 +1,8 @@
 
 (module struct '#%kernel
+  ;; this module should not be required directly
+  ;; require the `struct` submodule of racket/private/base instead
+
   (#%require "define.rkt"
              "define-struct.rkt"
              (for-syntax '#%kernel "define.rkt"

@@ -3,7 +3,7 @@
 (require racket/private/generic ; to avoid circular dependencies
          racket/private/generic-methods
          racket/vector
-         (only-in racket/private/hash paired-fold)
+         (only-in (submod racket/private/base hash) paired-fold)
          (for-syntax racket/base))
 
 (define (assoc? v)
