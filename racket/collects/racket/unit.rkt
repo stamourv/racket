@@ -26,7 +26,7 @@
          "private/unit-keywords.rkt"
          "private/unit-runtime.rkt"
          "private/unit-utils.rkt"
-         (rename-in (submod racket/private/base struct) [struct struct~]))
+         (rename-in racket/private/struct [struct struct~]))
 
 (provide define-signature-form open
          define-signature provide-signature-elements

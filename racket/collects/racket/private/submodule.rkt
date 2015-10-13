@@ -1,7 +1,4 @@
 (module module+ '#%kernel
-  ;; this module should not be required directly
-  ;; require the `module+` submodule of racket/private/base instead
-
   (#%require "more-scheme.rkt"
              "modbeg.rkt"
              (for-syntax '#%kernel

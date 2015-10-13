@@ -1,7 +1,4 @@
 (module hash "pre-base.rkt"
-  ;; this module should not be required directly
-  ;; require the `hash` submodule of racket/private/base instead
-
   (define (hash-keys h)
     (let loop ([pos (hash-iterate-first h)])
       (if pos

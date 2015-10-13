@@ -1,7 +1,4 @@
 (module list "pre-base.rkt"
-  ;; this module should not be required directly
-  ;; require the `list` submodule of racket/private/base instead
-
   (require (rename-in "reverse.rkt" [alt-reverse reverse]))
 
   (provide foldl

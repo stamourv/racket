@@ -1,6 +1,4 @@
 (module string "pre-base.rkt"
-  ;; this module should not be required directly
-  ;; require the `string` submodule of racket/private/base instead
 
   (provide real->decimal-string
            regexp-quote
