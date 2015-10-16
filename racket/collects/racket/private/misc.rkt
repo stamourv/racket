@@ -8,8 +8,9 @@
              (for-syntax '#%kernel
                          (submod "small-scheme.rkt" qq-and-or)
                          (submod "small-scheme.rkt" stx)
-                         "stxcase-scheme.rkt" "stxcase.rkt"))
-  
+                         "stxcase-scheme.rkt"
+                         (submod "stxcase-scheme.rkt" stxcase)))
+
   ;; -------------------------------------------------------------------------
 
   (define-for-syntax (pattern-failure user-stx pattern)

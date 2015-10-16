@@ -1,7 +1,9 @@
 
 (module stxparamkey '#%kernel
-  (#%require "small-scheme.rkt" "define.rkt" 
-             "stxcase.rkt" "stxloc.rkt" "with-stx.rkt")
+  (#%require "small-scheme.rkt" "define.rkt"
+             (submod "stxcase-scheme.rkt" stxcase)
+             (submod "stxcase-scheme.rkt" stxloc)
+             (submod "stxcase-scheme.rkt" with-stx))
 
   (-define-struct wrapped-renamer (renamer))
   (-define-struct parameter-binding (val param))

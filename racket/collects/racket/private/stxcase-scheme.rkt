@@ -4,11 +4,25 @@
 ;;  check-duplicate-identifier, and assembles everything we have so far
 
 (module stxcase-scheme '#%kernel
-  (#%require "small-scheme.rkt" (submod "small-scheme.rkt" stx)
-             "stxcase.rkt" "with-stx.rkt" "stxloc.rkt"
+  (#%require (submod "small-scheme.rkt" proto-include))
+
+  ;; all the modules below us, but above small-scheme.rkt, in topological order
+  ;; see comments in small-scheme.rkt for rationale
+  (proto-include "ellipses.rktl")
+  (proto-include "sc.rktl")
+  (proto-include "stxcase.rktl")
+  (proto-include "stxloc.rktl")
+  (proto-include "with-stx.rktl")
+
+  (#%require "small-scheme.rkt"
+             (submod "small-scheme.rkt" stx)
+             (submod "." stxcase)
+             (submod "." with-stx)
+             (submod "." stxloc)
              (for-syntax '#%kernel "small-scheme.rkt"
                          (submod "small-scheme.rkt" stx)
-                         "stxcase.rkt" "stxloc.rkt"))
+                         (submod "." stxcase)
+                         (submod "." stxloc)))
 
   (-define (check-duplicate-identifier names)
     (unless (and (list? names) (andmap identifier? names))
@@ -70,7 +84,8 @@
         (syntax-arm stx #f #t)
         (raise-argument-error 'syntax-protect "syntax?" stx)))
 
-  (#%provide syntax datum (all-from "with-stx.rkt") (all-from "stxloc.rkt") 
+  (#%provide syntax datum
+             (all-from (submod "." with-stx)) (all-from (submod "." stxloc))
              check-duplicate-identifier syntax-protect
              syntax-rules syntax-id-rules
              (for-syntax syntax-pattern-variable?)))

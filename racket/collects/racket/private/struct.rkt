@@ -5,7 +5,7 @@
              (for-syntax '#%kernel "define.rkt"
                          (submod "small-scheme.rkt" stx)
                          "stxcase-scheme.rkt" "small-scheme.rkt"
-                         "stxloc.rkt"))
+                         (submod "stxcase-scheme.rkt" stxloc)))
 
   (#%provide struct)
 

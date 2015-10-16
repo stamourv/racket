@@ -4,7 +4,8 @@
              (for-syntax '#%kernel
                          (submod "small-scheme.rkt" stx) "stxcase-scheme.rkt"
                          "small-scheme.rkt"
-                         "stxloc.rkt" "stxparamkey.rkt"))
+                         (submod "stxcase-scheme.rkt" stxloc)
+                         "stxparamkey.rkt"))
 
   (#%provide (for-syntax do-syntax-parameterize))
 

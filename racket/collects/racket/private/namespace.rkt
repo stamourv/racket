@@ -3,7 +3,7 @@
                        (submod "small-scheme.rkt" member)
                        (submod "small-scheme.rkt" stx)
                        "stxcase-scheme.rkt" "small-scheme.rkt"
-                       "stxloc.rkt"))
+                       (submod "stxcase-scheme.rkt" stxloc)))
 
   (provide make-base-empty-namespace
            make-base-namespace
