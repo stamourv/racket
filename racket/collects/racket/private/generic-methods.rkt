@@ -1,7 +1,8 @@
 (module generic-methods '#%kernel
 
   (#%require (for-syntax '#%kernel "small-scheme.rkt" "define.rkt"
-                         "stx.rkt" "stxcase-scheme.rkt")
+                         (submod "small-scheme.rkt" stx)
+                         "stxcase-scheme.rkt")
              "define.rkt" "../stxparam.rkt")
 
   (#%provide define/generic

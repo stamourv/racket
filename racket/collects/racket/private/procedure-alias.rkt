@@ -4,7 +4,7 @@
              "more-scheme.rkt"
              "kw-prop-key.rkt"
              (for-syntax '#%kernel
-                         "stx.rkt"
+                         (submod "small-scheme.rkt" stx)
                          "small-scheme.rkt"
                          "stxcase-scheme.rkt"
                          "name.rkt"

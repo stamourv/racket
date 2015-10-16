@@ -4,10 +4,10 @@
              "more-scheme.rkt"
              (for-syntax '#%kernel
                          "procedure-alias.rkt"
-                         "stx.rkt"
+                         (submod "small-scheme.rkt" stx)
                          "small-scheme.rkt"
                          "stxcase-scheme.rkt"
-                         "member.rkt"
+                         (submod "small-scheme.rkt" member)
                          "name.rkt"
                          "norm-define.rkt"
                          "qqstx.rkt"

@@ -2,8 +2,10 @@
 ;; #%qqstx : quasisyntax
 
 (module qqstx '#%kernel
-  (#%require "small-scheme.rkt" "stxcase-scheme.rkt" "stx.rkt"
-             (for-syntax '#%kernel "small-scheme.rkt" "stxcase-scheme.rkt" "stx.rkt"))
+  (#%require "small-scheme.rkt" "stxcase-scheme.rkt"
+             (submod "small-scheme.rkt" stx)
+             (for-syntax '#%kernel "small-scheme.rkt" "stxcase-scheme.rkt"
+                         (submod "small-scheme.rkt" stx)))
 
   (#%provide quasisyntax
              quasisyntax/loc

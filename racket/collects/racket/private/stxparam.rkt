@@ -1,9 +1,9 @@
 
 (module stxparam '#%kernel
   (#%require "define.rkt"
-             (for-syntax '#%kernel 
-                         "stx.rkt" "stxcase-scheme.rkt" 
-                         "small-scheme.rkt" 
+             (for-syntax '#%kernel
+                         (submod "small-scheme.rkt" stx) "stxcase-scheme.rkt"
+                         "small-scheme.rkt"
                          "stxloc.rkt" "stxparamkey.rkt"))
 
   (#%provide (for-syntax do-syntax-parameterize))

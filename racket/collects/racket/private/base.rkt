@@ -5,7 +5,7 @@
              "string.rkt"
              "stxcase-scheme.rkt"
              "qqstx.rkt"
-             "stx.rkt"
+             (submod "small-scheme.rkt" stx)
              "kw-file.rkt"
              "namespace.rkt"
              "struct.rkt"

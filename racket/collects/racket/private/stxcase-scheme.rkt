@@ -4,9 +4,11 @@
 ;;  check-duplicate-identifier, and assembles everything we have so far
 
 (module stxcase-scheme '#%kernel
-  (#%require "small-scheme.rkt" "stx.rkt" "stxcase.rkt" "with-stx.rkt" "stxloc.rkt"
-             (for-syntax '#%kernel "small-scheme.rkt" "stx.rkt" "stxcase.rkt"
-                         "stxloc.rkt"))
+  (#%require "small-scheme.rkt" (submod "small-scheme.rkt" stx)
+             "stxcase.rkt" "with-stx.rkt" "stxloc.rkt"
+             (for-syntax '#%kernel "small-scheme.rkt"
+                         (submod "small-scheme.rkt" stx)
+                         "stxcase.rkt" "stxloc.rkt"))
 
   (-define (check-duplicate-identifier names)
     (unless (and (list? names) (andmap identifier? names))

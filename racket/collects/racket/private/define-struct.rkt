@@ -6,8 +6,9 @@
              "generic-methods.rkt"
              (for-syntax '#%kernel "define.rkt"
                          "procedure-alias.rkt"
-                         "member.rkt"
-                         "stx.rkt" "stxcase-scheme.rkt" "small-scheme.rkt" 
+                         (submod "small-scheme.rkt" member)
+                         (submod "small-scheme.rkt" stx)
+                         "stxcase-scheme.rkt" "small-scheme.rkt"
                          "stxloc.rkt" "qqstx.rkt"
                          "struct-info.rkt"))
 

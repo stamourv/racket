@@ -1,7 +1,9 @@
 
 (module logger '#%kernel
   (#%require "small-scheme.rkt" "define.rkt"
-             (for-syntax '#%kernel "stx.rkt" "small-scheme.rkt" "stxcase-scheme.rkt"))
+             (for-syntax '#%kernel
+                         (submod "small-scheme.rkt" stx)
+                         "small-scheme.rkt" "stxcase-scheme.rkt"))
 
   (#%provide log-fatal log-error log-warning log-info log-debug
              define-logger)

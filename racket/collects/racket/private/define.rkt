@@ -4,7 +4,9 @@
 
 (module define '#%kernel
   (#%require (for-syntax '#%kernel 
-                         "letstx-scheme.rkt" "stxcase-scheme.rkt" "stx.rkt" "qqstx.rkt"
+                         "letstx-scheme.rkt" "stxcase-scheme.rkt"
+                         (submod "small-scheme.rkt" stx)
+                         "qqstx.rkt"
                          "norm-define.rkt"))
 
   (#%provide define 

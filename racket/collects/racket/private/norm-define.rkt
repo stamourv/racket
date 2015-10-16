@@ -1,7 +1,8 @@
 
 (module norm-define '#%kernel
   (#%require "small-scheme.rkt" "stxcase-scheme.rkt"
-             "member.rkt" "stx.rkt" "qqstx.rkt")
+             (submod "small-scheme.rkt" member) (submod "small-scheme.rkt" stx)
+             "qqstx.rkt")
 
   (#%provide normalize-definition normalize-definition/mk-rhs)
 

@@ -4,15 +4,15 @@
              "misc.rkt"
              "define.rkt"
              "letstx-scheme.rkt"
-             "member.rkt"
+             (submod "small-scheme.rkt" member)
              "reverse.rkt"
              '#%unsafe
              '#%flfxnum
              (for-syntax '#%kernel
-                         "stx.rkt"
+                         (submod "small-scheme.rkt" stx)
                          "qqstx.rkt"
                          "define.rkt"
-                         "member.rkt"
+                         (submod "small-scheme.rkt" member)
                          "small-scheme.rkt"
                          "stxcase-scheme.rkt"))
 

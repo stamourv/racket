@@ -2,8 +2,8 @@
 
 (module pre-base '#%kernel
   (#%require (for-syntax '#%kernel
-                         "stx.rkt"
-                         "qq-and-or.rkt"))
+                         (submod "small-scheme.rkt" stx)
+                         (submod "small-scheme.rkt" qq-and-or)))
   (#%require "more-scheme.rkt"
              "misc.rkt"
              (all-except "define.rkt" define define-syntax define-for-syntax)
@@ -14,7 +14,7 @@
              (prefix printing: "modbeg.rkt")
              "for.rkt"
              "map.rkt" ; shadows #%kernel bindings
-             "member.rkt"
+             (submod "small-scheme.rkt" member)
              "kernstruct.rkt"
              "norm-arity.rkt"
              "top-int.rkt"
@@ -195,7 +195,7 @@
                               prop:stream in-stream empty-stream make-do-stream
                               split-for-body)
              (all-from "kernstruct.rkt")
-             (all-from "member.rkt")
+             (all-from (submod "small-scheme.rkt" member))
              #%top-interaction
 
              map for-each andmap ormap

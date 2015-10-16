@@ -3,7 +3,9 @@
 ;; syntax/loc
 
 (module stxloc '#%kernel
-  (#%require "qq-and-or.rkt" "stxcase.rkt" "define-et-al.rkt"
+  (#%require (submod "small-scheme.rkt" qq-and-or)
+             (submod "small-scheme.rkt" define-et-al)
+             "stxcase.rkt"
              (for-syntax '#%kernel "stxcase.rkt" "sc.rkt"))
 
   ;; Like regular syntax-case, but with free-identifier=? replacement

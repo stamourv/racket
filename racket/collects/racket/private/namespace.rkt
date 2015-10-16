@@ -1,7 +1,8 @@
 (module namespace "pre-base.rkt"
   (require (for-syntax '#%kernel "define.rkt"
-                       "member.rkt"
-                       "stx.rkt" "stxcase-scheme.rkt" "small-scheme.rkt" 
+                       (submod "small-scheme.rkt" member)
+                       (submod "small-scheme.rkt" stx)
+                       "stxcase-scheme.rkt" "small-scheme.rkt"
                        "stxloc.rkt"))
 
   (provide make-base-empty-namespace

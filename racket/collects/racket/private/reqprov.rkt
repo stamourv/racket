@@ -1,9 +1,10 @@
 (module reqprov '#%kernel
   (#%require "define.rkt"
              (for-syntax '#%kernel
-                         "stx.rkt" "stxcase-scheme.rkt" "small-scheme.rkt" 
+                         (submod "small-scheme.rkt" stx)
+                         "stxcase-scheme.rkt" "small-scheme.rkt"
                          "stxloc.rkt" "qqstx.rkt" "more-scheme.rkt"
-                         "member.rkt"
+                         (submod "small-scheme.rkt" member)
                          "../require-transform.rkt"
                          "../provide-transform.rkt"
                          "struct-info.rkt"))

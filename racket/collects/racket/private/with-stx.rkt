@@ -2,9 +2,12 @@
 ;; with-syntax, generate-temporaries
 
 (module with-stx '#%kernel
-  (#%require "stx.rkt" "small-scheme.rkt" "stxcase.rkt"
-             (for-syntax '#%kernel "stx.rkt" "stxcase.rkt" "stxloc.rkt" 
-                         "sc.rkt" "qq-and-or.rkt" "cond.rkt"))
+  (#%require (submod "small-scheme.rkt" stx) "small-scheme.rkt" "stxcase.rkt"
+             (for-syntax '#%kernel
+                         (submod "small-scheme.rkt" stx)
+                         (submod "small-scheme.rkt" qq-and-or)
+                         (submod "small-scheme.rkt" cond)
+                         "stxcase.rkt" "stxloc.rkt" "sc.rkt"))
 
   (-define (with-syntax-fail stx)
     (raise-syntax-error
