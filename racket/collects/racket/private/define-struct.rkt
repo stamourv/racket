@@ -10,7 +10,7 @@
                          (submod "small-scheme.rkt" stx)
                          "stxcase-scheme.rkt" "small-scheme.rkt"
                          (submod "stxcase-scheme.rkt" stxloc)
-                         "qqstx.rkt" "struct-info.rkt"))
+                         (submod "define.rkt" qqstx) "struct-info.rkt"))
 
   (#%provide define-struct*
              define-struct/derived

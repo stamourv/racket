@@ -9,8 +9,8 @@
                          "stxcase-scheme.rkt"
                          (submod "small-scheme.rkt" member)
                          "name.rkt"
-                         "norm-define.rkt"
-                         "qqstx.rkt"
+                         (submod "define.rkt" norm-define)
+                         (submod "define.rkt" qqstx)
                          "sort.rkt"
                          "kw-prop-key.rkt"))
 

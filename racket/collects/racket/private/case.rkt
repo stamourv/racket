@@ -5,7 +5,7 @@
 (module case '#%kernel
   (#%require '#%paramz '#%unsafe "small-scheme.rkt" "define.rkt"
              (for-syntax '#%kernel "small-scheme.rkt" "stxcase-scheme.rkt"
-                         "qqstx.rkt" "define.rkt" "sort.rkt"))
+                         (submod "define.rkt" qqstx) "define.rkt" "sort.rkt"))
   (#%provide case)
   
   

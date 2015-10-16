@@ -3,11 +3,20 @@
 ;; #%define : define and define-syntax
 
 (module define '#%kernel
-  (#%require (for-syntax '#%kernel 
-                         "letstx-scheme.rkt" "stxcase-scheme.rkt"
+  (#%require (submod "small-scheme.rkt" proto-include))
+
+  ;; all the modules below us, but above stxcase-scheme.rkt, in topological order
+  ;; see comments in small-scheme.rkt for rationale
+  (proto-include "qqstx.rktl")
+  (proto-include "norm-define.rktl")
+  (proto-include "letstx-scheme.rktl")
+
+  (#%require (for-syntax '#%kernel
+                         "stxcase-scheme.rkt"
                          (submod "small-scheme.rkt" stx)
-                         "qqstx.rkt"
-                         "norm-define.rkt"))
+                         (submod "." letstx-scheme)
+                         (submod "." qqstx)
+                         (submod "." norm-define)))
 
   (#%provide define 
              define-syntax 

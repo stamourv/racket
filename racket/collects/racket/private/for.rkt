@@ -3,14 +3,14 @@
   (#%require "more-scheme.rkt"
              "misc.rkt"
              "define.rkt"
-             "letstx-scheme.rkt"
+             (submod "define.rkt" letstx-scheme)
              (submod "small-scheme.rkt" member)
              "reverse.rkt"
              '#%unsafe
              '#%flfxnum
              (for-syntax '#%kernel
                          (submod "small-scheme.rkt" stx)
-                         "qqstx.rkt"
+                         (submod "define.rkt" qqstx)
                          "define.rkt"
                          (submod "small-scheme.rkt" member)
                          "small-scheme.rkt"

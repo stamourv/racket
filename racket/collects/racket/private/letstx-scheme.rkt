@@ -1,55 +1,7 @@
-
-;;----------------------------------------------------------------------
-;; #%stxcase-scheme: adds let-syntax, letrec-syntax, etc.
-
+;; stub module
+;; implementation lives in letstx-scheme.rktl
+;; real module is now a submodule of define.rkt
+;; see comment at the top of small-scheme.rkt for rationale
 (module letstx-scheme '#%kernel
-  (#%require "small-scheme.rkt"
-             (for-syntax '#%kernel
-                         (submod "stxcase-scheme.rkt" stxcase)
-                         (submod "stxcase-scheme.rkt" with-stx)
-                         (submod "stxcase-scheme.rkt" stxloc)))
-
-  (-define-syntax letrec-syntaxes
-    (lambda (stx)
-      (syntax-case stx ()
-	[(_ ([(id ...) expr] ...) body1 body ...)
-	 (syntax/loc stx
-	     (letrec-syntaxes+values ([(id ...) expr] ...)
-				     ()
-	       body1 body ...))])))
-
-  (-define-syntax letrec-syntax
-    (lambda (stx)
-      (syntax-case stx ()
-	[(_ ([id expr] ...) body1 body ...)
-	 (syntax/loc stx
-	     (letrec-syntaxes+values ([(id) expr] ...)
-				     ()
-	       body1 body ...))])))
-
-  (-define-syntax let-syntaxes
-    (lambda (stx)
-      (syntax-case stx ()
-	[(_ ([(id ...) expr] ...) body1 body ...)
-	 (with-syntax ([((tmp ...) ...) 
-			(map
-			 generate-temporaries 
-			 (syntax->list (syntax ((id ...) ...))))])
-	   (syntax/loc stx
-	       (letrec-syntaxes+values ([(tmp ...) expr] ...) ()
-		 (letrec-syntaxes+values ([(id ...) (values
-						     (make-rename-transformer (quote-syntax tmp))
-						     ...)] ...)
-					 ()
-		   body1 body ...))))])))
-
-  (-define-syntax let-syntax
-    (lambda (stx)
-      (syntax-case stx ()
-	[(_ ([id expr] ...) body1 body ...)
-	 (syntax/loc stx
-	     (let-syntaxes ([(id) expr] ...)
-	       body1 body ...))])))
-
-  (#%provide (all-from "small-scheme.rkt")
-             letrec-syntaxes letrec-syntax let-syntaxes let-syntax))
+  (#%require (submod "define.rkt" letstx-scheme))
+  (#%provide (all-from (submod "define.rkt" letstx-scheme))))

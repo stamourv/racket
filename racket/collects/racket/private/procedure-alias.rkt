@@ -8,8 +8,8 @@
                          "small-scheme.rkt"
                          "stxcase-scheme.rkt"
                          "name.rkt"
-                         "norm-define.rkt"
-                         "qqstx.rkt"
+                         (submod "define.rkt" norm-define)
+                         (submod "define.rkt" qqstx)
                          "sort.rkt"))
   
   (#%provide syntax-procedure-alias-property alias-of)

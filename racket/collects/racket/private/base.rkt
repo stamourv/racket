@@ -4,7 +4,7 @@
              "list.rkt" ; shadows `reverse', `mem{q,v,ber}'
              "string.rkt"
              "stxcase-scheme.rkt"
-             "qqstx.rkt"
+             (submod "define.rkt" qqstx)
              (submod "small-scheme.rkt" stx)
              "kw-file.rkt"
              "namespace.rkt"
@@ -33,7 +33,7 @@
              (rename -regexp-replace* regexp-replace*)
              identifier?
              (all-from-except "stxcase-scheme.rkt" datum datum-case with-datum)
-             (all-from-except "qqstx.rkt" quasidatum undatum undatum-splicing)
+             (all-from-except (submod "define.rkt" qqstx) quasidatum undatum undatum-splicing)
              (all-from "namespace.rkt")
              (all-from "cert.rkt")
              (all-from "submodule.rkt")

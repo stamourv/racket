@@ -4,7 +4,7 @@
                          (submod "small-scheme.rkt" stx)
                          "stxcase-scheme.rkt" "small-scheme.rkt"
                          (submod "stxcase-scheme.rkt" stxloc)
-                         "qqstx.rkt" "more-scheme.rkt"
+                         (submod "define.rkt" qqstx) "more-scheme.rkt"
                          (submod "small-scheme.rkt" member)
                          "../require-transform.rkt"
                          "../provide-transform.rkt"

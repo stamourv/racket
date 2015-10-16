@@ -7,7 +7,7 @@
   (#%require "more-scheme.rkt"
              "misc.rkt"
              (all-except "define.rkt" define define-syntax define-for-syntax)
-             "letstx-scheme.rkt"
+             (submod "define.rkt" letstx-scheme)
              "kw.rkt"
              "define-struct.rkt"
              "reqprov.rkt"
@@ -20,7 +20,7 @@
              "top-int.rkt"
              '#%builtin  ; so it's attached
              (for-syntax "kw.rkt"
-                         "norm-define.rkt"))
+                         (submod "define.rkt" norm-define)))
 
   (define-values (new-apply-proc)
     (make-keyword-procedure
@@ -152,7 +152,7 @@
   (#%provide (all-from-except "more-scheme.rkt" old-case fluid-let)
              (all-from-except "misc.rkt" collection-path collection-file-path)
              (all-from "define.rkt")
-             (all-from-except "letstx-scheme.rkt" -define -define-syntax -define-struct old-cond)
+             (all-from-except (submod "define.rkt" letstx-scheme) -define -define-syntax -define-struct old-cond)
              (rename new-lambda lambda)
              (rename new-λ λ)
              (rename new-define define)

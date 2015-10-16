@@ -7,7 +7,8 @@
              (submod "small-scheme.rkt" member)
              (for-syntax '#%kernel
                          (submod "small-scheme.rkt" stx)
-                         "small-scheme.rkt" "stxcase-scheme.rkt" "qqstx.rkt"))
+                         "small-scheme.rkt" "stxcase-scheme.rkt"
+                         (submod "define.rkt" qqstx)))
 
   ;; For `old-case`:
   (define-syntax case-test

@@ -4,8 +4,8 @@
              (for-syntax '#%kernel
                          "stxcase-scheme.rkt"
                          "more-scheme.rkt"
-                         "letstx-scheme.rkt"
-                         "qqstx.rkt"))
+                         (submod "define.rkt" letstx-scheme)
+                         (submod "define.rkt" qqstx)))
 
   (#%provide module+)
 
