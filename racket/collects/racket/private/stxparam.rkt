@@ -1,12 +1,14 @@
 
 (module stxparam '#%kernel
   (#%require "define.rkt"
+             "letstx-scheme.rkt"
              (for-syntax '#%kernel 
                          "stx.rkt" "stxcase-scheme.rkt" 
                          "small-scheme.rkt" 
                          "stxloc.rkt" "stxparamkey.rkt"))
 
-  (#%provide (for-syntax do-syntax-parameterize))
+  (#%provide (for-syntax do-syntax-parameterize)
+             define-syntax-parameter syntax-parameterize)
 
   (define-for-syntax (do-syntax-parameterize stx let-syntaxes-id empty-body-ok? keep-orig?)
     (syntax-case stx ()
@@ -54,4 +56,22 @@
              (syntax/loc stx
                (let-syntaxes ([(gen-id) (convert-renamer val)] ...)
                  orig ...
-                 body ...)))))])))
+                 body ...)))))]))
+
+  (define-syntax (define-syntax-parameter stx)
+    (syntax-case stx ()
+      [(_ id init-val)
+       (with-syntax ([gen-id (car (generate-temporaries (list #'id)))])
+	 #'(begin
+	     (define-syntax gen-id (convert-renamer init-val))
+	     (define-syntax id
+	       (let ([gen-id #'gen-id])
+		 (make-set!-transformer
+		  (make-syntax-parameter
+		   (lambda (stx)
+		     (let ([v (syntax-parameter-target-value gen-id)])
+		       (apply-transformer v stx #'set!)))
+		   gen-id))))))]))
+
+  (define-syntax (syntax-parameterize stx)
+    (do-syntax-parameterize stx #'let-syntaxes #f #f)))

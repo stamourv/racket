@@ -1,8 +1,8 @@
 (module generic-methods '#%kernel
 
   (#%require (for-syntax '#%kernel "small-scheme.rkt" "define.rkt"
-                         "stx.rkt" "stxcase-scheme.rkt")
-             "define.rkt" "../stxparam.rkt")
+                         "stx.rkt" "stxcase-scheme.rkt" "stxparamkey.rkt")
+             "define.rkt" "stxparam.rkt")
 
   (#%provide define/generic
              generic-property
@@ -195,13 +195,17 @@
        #'(call-with-values (lambda () (generic-methods gen def ...)) vector)]))
 
   (define-syntax (define/generic stx)
-    (define gen-id (syntax-parameter-value #'generic-method-outer-context))
+    (define gen-id
+      (syntax-parameter-target-value
+       (syntax-parameter-target #'generic-method-outer-context)))
     (define gen-val
       (and (identifier? gen-id)
            (syntax-local-value gen-id (lambda () #f))))
     (unless (generic-info? gen-val)
       (raise-syntax-error 'define/generic "only allowed inside methods" stx))
-    (define gen-inner-id (syntax-parameter-value #'generic-method-inner-context))
+    (define gen-inner-id
+      (syntax-parameter-target-value
+       (syntax-parameter-target #'generic-method-inner-context)))
     (syntax-case stx ()
       [(_ bind ref)
        (let ()
