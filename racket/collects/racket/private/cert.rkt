@@ -1,4 +1,4 @@
-(module base "pre-base.rkt"
+(module cert "pre-base.rkt"
 
   ;; Backward compatibility
   (#%provide syntax-recertify
