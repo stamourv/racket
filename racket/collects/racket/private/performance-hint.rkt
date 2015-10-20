@@ -1,5 +1,5 @@
 
-(module inline '#%kernel
+(module performance-hint '#%kernel
   (#%require (for-syntax '#%kernel))
   (#%provide begin-encourage-inline)
 

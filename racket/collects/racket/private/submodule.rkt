@@ -1,4 +1,4 @@
-(module module+ '#%kernel
+(module submodule '#%kernel
   (#%require "more-scheme.rkt"
              "modbeg.rkt"
              (for-syntax '#%kernel
