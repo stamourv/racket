@@ -4,8 +4,8 @@
                          "stx.rkt" "stxcase-scheme.rkt" "small-scheme.rkt" 
                          "stxloc.rkt" "qqstx.rkt" "more-scheme.rkt"
                          "member.rkt"
-                         "../require-transform.rkt"
-                         "../provide-transform.rkt"
+                         "require-transform.rkt"
+                         "provide-transform.rkt"
                          "struct-info.rkt"))
   
   (#%provide lib file planet submod
