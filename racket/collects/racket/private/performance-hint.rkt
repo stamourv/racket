@@ -1,24 +1,7 @@
-
+;; stub module
+;; implementation lives in performance-hint.rktl
+;; real module is now a submodule of all.rkt
+;; see comment at the top of all.rkt for rationale
 (module performance-hint '#%kernel
-  (#%require (for-syntax '#%kernel))
-  (#%provide begin-encourage-inline)
-
-  ;; Attach a property to encourage the bytecode compiler to inline
-  ;; functions:
-  (define-syntaxes (begin-encourage-inline)
-    (lambda (stx)
-      (let-values ([(l) (syntax->list stx)])
-        (if l
-            (datum->syntax
-             stx
-             (cons
-              (quote-syntax begin)
-              (map
-               (lambda (form)
-                 (syntax-property form
-                                  'compiler-hint:cross-module-inline 
-                                  #t))
-               (cdr l)))
-             stx
-             stx)
-            (raise-syntax-error #f "bad syntax" stx))))))
+  (#%require (submod "all.rkt" performance-hint))
+  (#%provide (all-from (submod "all.rkt" performance-hint))))

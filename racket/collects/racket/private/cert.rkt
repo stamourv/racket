@@ -1,14 +1,7 @@
-(module cert "pre-base.rkt"
-
-  ;; Backward compatibility
-  (#%provide syntax-recertify
-             syntax-local-certifier)
-
-  (define syntax-recertify (lambda (a b c d) a))
-  (define syntax-local-certifier
-    (case-lambda
-     [() (syntax-local-certifier 'a)]
-     [(a) (case-lambda 
-           [(a) a]
-           [(a b) a]
-           [(a b c) a])])))
+;; stub module
+;; implementation lives in cert.rktl
+;; real module is now a submodule of all.rkt
+;; see comment at the top of all.rkt for rationale
+(module cert '#%kernel
+  (#%require (submod "all.rkt" cert))
+  (#%provide (all-from (submod "all.rkt" cert))))

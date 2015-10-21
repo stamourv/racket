@@ -1,20 +1,7 @@
+;; stub module
+;; implementation lives in reverse.rktl
+;; real module is now a submodule of all.rkt
+;; see comment at the top of all.rkt for rationale
 (module reverse '#%kernel
-  (#%provide alt-reverse)
-
-  (define-values (alt-reverse)
-    (if (eval-jit-enabled)
-        (let-values ([(reverse)
-                      (lambda (l)
-                        (if (list? l) 
-                            (void)
-                            (raise-argument-error 'reverse "list?" l))
-                        (letrec-values ([(loop)
-                                         (lambda (a l)
-                                           (if (null? l)
-                                               a
-                                               (loop (cons (car l) a) (cdr l))))])
-                          (loop null l)))])
-          reverse)
-        reverse)))
-
-
+  (#%require (submod "all.rkt" reverse))
+  (#%provide (all-from (submod "all.rkt" reverse))))

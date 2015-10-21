@@ -1,11 +1,7 @@
-
-;;----------------------------------------------------------------------
-;; assembles all basic forms we have so far
-
+;; stub module
+;; implementation lives in small-scheme.rktl
+;; real module is now a submodule of all.rkt
+;; see comment at the top of all.rkt for rationale
 (module small-scheme '#%kernel
-  (#%require "qq-and-or.rkt" "cond.rkt" "define-et-al.rkt")
-
-  (#%provide (all-from "qq-and-or.rkt")
-             (all-from "cond.rkt")
-             (all-from "define-et-al.rkt")))
-
+  (#%require (submod "all.rkt" small-scheme))
+  (#%provide (all-from (submod "all.rkt" small-scheme))))
