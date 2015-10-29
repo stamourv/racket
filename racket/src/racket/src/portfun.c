@@ -4455,11 +4455,15 @@ static Scheme_Object *do_load_handler(void *data)
   Scheme_Object *port = lhd->port;
   Scheme_Thread *p = lhd->p;
   Scheme_Config *config = lhd->config;
-  Scheme_Object *last_val = scheme_void, *obj, **save_array = NULL, *modname;
+  Scheme_Object *last_val = scheme_void, *obj, **save_array = NULL, *modname, *main_module;
   Scheme_Env *genv;
-  int save_count = 0, got_one = 0, as_module, check_module_name = 0, skip_no_more_check = 0;
+  int save_count = 0, got_one = 0, as_module, check_module_name = 0, skip_no_more_check = 0, was_submodule = 0;
 
   modname = lhd->expected_module;
+
+  printf("starting: "); fflush(stdout); // TODO
+  scheme_debug_print(modname);
+  printf("\n"); fflush(stdout);
 
   if (SCHEME_TRUEP(modname)) {
     /* Look for a module directory: */
@@ -4477,6 +4481,8 @@ static Scheme_Object *do_load_handler(void *data)
                                  buffer, 0, dir_header_size,
                                  0, 1, scheme_make_integer(0));
 
+    // TODO could instead try to read the whole port, and operate on that
+    //   and cache the result of reading (keyed by zo filename)
     if ((got == dir_header_size)
         && (buffer[0] == '#')
         && (buffer[1] == '~')
@@ -4490,8 +4496,10 @@ static Scheme_Object *do_load_handler(void *data)
       char *find_name, *s;
       intptr_t namelen, i, name_size, pos, offset = 0, rellen;
 
-      if (SCHEME_PAIRP(modname))
+      if (SCHEME_PAIRP(modname)) {
+        printf("  yup, it's a pair\n"); fflush(stdout); // TODO
         find_name = scheme_submodule_path_to_string(SCHEME_CDR(modname), &namelen);
+      }
       else {
         find_name = "";
         namelen = 0;
@@ -4526,8 +4534,18 @@ static Scheme_Object *do_load_handler(void *data)
 
       if (offset) {
         scheme_set_file_position(port, offset);
-        if (!SCHEME_SYMBOLP(modname))
+        if (!SCHEME_SYMBOLP(modname)) {
+          printf("  truncating now\n"); fflush(stdout); // TODO
+          was_submodule = 1;
+          main_module = SCHEME_CAR(modname);
           modname = SCHEME_CAR(SCHEME_CDR(modname));
+          // TODO NEW!
+          if (SCHEME_FALSEP(main_module)) {
+            printf("  should skip\n"); fflush(stdout);
+            // return scheme_void; // TODO if I skip here, then I start getting unbound id errors
+            // TODO so clearly, car being #f does not really mean can skip
+          }
+        }
         skip_no_more_check = 1;
       } else if (SCHEME_PAIRP(modname)) {
         /* don't complain if a submodule isn't found */
@@ -4536,15 +4554,41 @@ static Scheme_Object *do_load_handler(void *data)
     }
   } 
 
-  if (SCHEME_PAIRP(modname)) {
+  printf("deciding for "); fflush(stdout); // TODO
+  scheme_debug_print(modname);
+  printf("\n"); fflush(stdout);
+  
+  /* if (was_submodule) { // TODO modname is never a pair, it looks like */
+  /*   if (SCHEME_PAIRP(modname)) */
+  /*     modname = SCHEME_CAR(modname); */
+  /*   if (SCHEME_FALSEP(main_module)) { */
+  /*     /\* caller says the main module is already loaded,  */
+  /*        so don't reload for submodules *\/ */
+  /*     // TODO ah, sounds promising. may want to extend to do so when loading other submodules */
+  /*     //   heh, or just have racket/base require the enclosing module */
+  /*     /\* printf("skipping\n"); *\/ */
+  /*     printf("would skip\n"); fflush(stdout); // TODO */
+  /*     // return scheme_void; */
+  /*   } */
+  /* } */
+
+  if (SCHEME_PAIRP(modname)) { // TODO modname is never a pair, it looks like
     modname = SCHEME_CAR(modname);
 
+    // TODO this is probably dead code now, and can't work since we don't load all submodules when we open a file
     if (SCHEME_FALSEP(modname)) {
       /* caller says the main module is already loaded, 
          so don't reload for submodules */
+      // TODO ah, sounds promising. may want to extend to do so when loading other submodules
+      //   heh, or just have racket/base require the enclosing module
+      printf("skipping\n"); fflush(stdout); // TODO
       return scheme_void;
     }
   }
+
+  printf("didn't skip "); fflush(stdout); // TODO
+  scheme_debug_print(modname); // TODO
+  printf("\n"); fflush(stdout);
 
   if (scheme_module_code_cache && SCHEME_TRUEP(modname)) {
     intptr_t got;
@@ -4552,6 +4596,7 @@ static Scheme_Object *do_load_handler(void *data)
 #   define HASH_HEADER_SIZE (4 + 20 + 16)
     char buffer[HASH_HEADER_SIZE];
 
+    printf("  in the cache if block\n"); // TODO
     vers_size = strlen(MZSCHEME_VERSION);
     hash_header_size = 4 + vers_size + 20;
     if (hash_header_size >= HASH_HEADER_SIZE) 
@@ -4578,6 +4623,10 @@ static Scheme_Object *do_load_handler(void *data)
       }
     }
 
+    printf("  obj = "); fflush(stdout); // TODO
+    if (obj) scheme_debug_print(obj); // TODO yep, we get something, so presumably we hit the cache?
+    printf("\n"); fflush(stdout);
+
 
     if (obj) {
       Scheme_Object *dir;
@@ -4585,6 +4634,9 @@ static Scheme_Object *do_load_handler(void *data)
       if (SCHEME_TRUEP(dir))
         dir = scheme_path_to_directory_path(dir);
       obj = scheme_make_pair(obj, dir);
+      printf("  looking up in cache: "); fflush(stdout); // TODO
+      scheme_debug_print(obj);
+      printf("\n"); fflush(stdout); // TODO
       obj = scheme_lookup_in_table(scheme_module_code_cache, (const char *)obj);
       if (obj)
         obj = scheme_ephemeron_value(obj);
@@ -4598,6 +4650,12 @@ static Scheme_Object *do_load_handler(void *data)
         top->prefix = NULL; /* indicates a wrapper */
 
         obj = (Scheme_Object *)top;
+
+        // TODO ok, are we getting here, or are we loading from the file below?
+        //   nope, not reaching here
+        //   the only code that adds stuff to the cache seems to be in module.c, and to not work with submodules
+        //   -> so maybe we need to add things to the cache below?
+        printf("  returning from cache case\n"); fflush(stdout); // TODO
         
         return _scheme_apply_multi(scheme_get_param(config, MZCONFIG_EVAL_HANDLER),
                                    1, &obj);
@@ -4620,7 +4678,7 @@ static Scheme_Object *do_load_handler(void *data)
       /* Must be of the form `(module <somename> ...)',possibly compiled. */
       /* Also, file should have no more expressions. */
       Scheme_Object *a, *d, *other = NULL;
-      Scheme_Module *m;
+      Scheme_Module *m; // TODO want to put its code_key in the cache, or sth
 
       d = obj;
 
@@ -4718,10 +4776,35 @@ static Scheme_Object *do_load_handler(void *data)
 	d = scheme_make_pair(a, d);
 	obj = scheme_datum_to_syntax(d, obj, scheme_false, 0, 1);
         as_module = 1;
+      } else {
+
+        // TODO try adding to the cache?
+        //   ok, this is useless. it's already added in the cache by the other code.
+        //   and of course, the cache works.
+        //   the thing that does *not* work, is caching the submodules when we load the parent module
+        printf("  adding to the cache "); fflush(stdout);
+        scheme_debug_print(m->code_key);
+        printf("\n"); fflush(stdout);
+        if (!scheme_module_code_cache) { // TODO barf, just copied from other place that populates cache
+          printf("  initializing cache\n"); fflush(stdout); // TODO
+          REGISTER_SO(scheme_module_code_cache);
+          scheme_module_code_cache = scheme_make_weak_equal_table();
+        }
+        // TODO obj is the module syntax? we got a module here, can we put it in the cache?
+        scheme_add_to_table(scheme_module_code_cache,
+                            (const char *)m->code_key,
+                            scheme_make_ephemeron(m->code_key, obj), // TODO maybe?
+                            0);
+        /* scheme_add_to_table(scheme_module_code_cache, */
+        /*                     (const char *)cache_key, */
+        /*                     scheme_make_ephemeron(cache_key, obj), // TODO maybe? */
+        /*                     0); */
+        printf("  added to the cache\n"); fflush(stdout);
       }
     } else {
       /* Add #%top-interaction, since we're in non-module mode: */
       Scheme_Object *a;
+
       a = scheme_make_pair(scheme_intern_symbol("#%top-interaction"), obj);
       obj = scheme_datum_to_syntax(a, obj, scheme_false, 0, 0);
     }
@@ -4786,6 +4869,10 @@ static Scheme_Object *default_load(int argc, Scheme_Object *argv[])
   Scheme_Config *config;
   LoadHandlerData *lhd;
   Scheme_Cont_Frame_Data cframe;
+
+  printf("starting default_load, expected_module: "); fflush(stdout); // TODO already what I expect, so find who calls us
+  scheme_debug_print(argv[1]);
+  printf("\n"); fflush(stdout);
 
   if (!SCHEME_PATH_STRINGP(argv[0]))
     scheme_wrong_contract("default-load-handler", "path-string?", 0, argc, argv);
@@ -4866,6 +4953,10 @@ static Scheme_Object *default_load(int argc, Scheme_Object *argv[])
   lhd->stxsrc = name;
   lhd->expected_module = expected_module;
 
+  printf("default load, expected module: "); fflush(stdout); // TODO
+  scheme_debug_print(expected_module);
+  printf("\n"); fflush(stdout);
+
   scheme_push_continuation_frame(&cframe);
   scheme_set_cont_mark(scheme_parameterization_key, (Scheme_Object *)config);
 
@@ -4916,12 +5007,18 @@ Scheme_Object *scheme_load_with_clrd(int argc, Scheme_Object *argv[],
 
 static Scheme_Object *load(int argc, Scheme_Object *argv[])
 {
+  printf("in load, arg #0 = "); fflush(stdout); // TODO nope, not called from here?
+  scheme_debug_print(argv[0]);
+  printf("\n"); fflush(stdout); // TODO
   return scheme_load_with_clrd(argc, argv, "load", MZCONFIG_LOAD_HANDLER);
 }
 
 static Scheme_Object *
 current_load(int argc, Scheme_Object *argv[])
 {
+  printf("\nin current_load"); fflush(stdout); // TODO yep, we're coming from here
+  // TODO hm, no call sites from inside the C code, so maybe the startup racket code is calling us?
+  printf("\n"); fflush(stdout);
   return scheme_param_config("current-load",
 			     scheme_make_integer(MZCONFIG_LOAD_HANDLER),
 			     argc, argv,

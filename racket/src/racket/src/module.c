@@ -6557,13 +6557,28 @@ static Scheme_Object *do_module_execute(Scheme_Object *data, Scheme_Env *genv,
   m = MALLOC_ONE_TAGGED(Scheme_Module);
   memcpy(m, data, sizeof(Scheme_Module));
 
+  printf("  do_module_execute "); fflush(stdout);
+  if (m->code_key) scheme_debug_print(m->code_key);
+  // TODO oh, funny. when loading from source, we have these submodules, but not when loading from zo
+  printf("\n    pre submods "); fflush(stdout);
+  if (m->pre_submodules) scheme_debug_print(m->pre_submodules);
+  printf("\n    post submods "); fflush(stdout);
+  if (m->post_submodules) scheme_debug_print(m->post_submodules);
+  printf("\n"); fflush(stdout);
+
   if (set_cache && m->code_key
       && (!m->pre_submodules || SCHEME_NULLP(m->pre_submodules))
       && (!m->post_submodules || SCHEME_NULLP(m->post_submodules))) {
+    // TODO this is adding stuff to the module cache (the only place, it looks like)
+    //   and it doesn't work if there are submodules, it looks like
+    //   (and does load even call us here?)
     if (!scheme_module_code_cache) {
       REGISTER_SO(scheme_module_code_cache);
       scheme_module_code_cache = scheme_make_weak_equal_table();
     }
+    printf("  other code path adding to table "); fflush(stdout); // TODO
+    scheme_debug_print(m->code_key);
+    printf("\n");
     scheme_add_to_table(scheme_module_code_cache,
                         (const char *)m->code_key,
                         scheme_make_ephemeron(m->code_key, data),
