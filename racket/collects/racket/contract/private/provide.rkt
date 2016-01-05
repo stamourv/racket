@@ -389,7 +389,7 @@
                            pos-module-source
                            #f #t))
   (with-contract-continuation-mark
-   blme 'no-negative-party ; we don't know the negative party yet
+   (cons blme 'no-negative-party) ; we don't know the negative party yet
    ;; computing neg-accepter may involve some front-loaded checking. instrument
    (define neg-accepter ((p blme) val))
 
