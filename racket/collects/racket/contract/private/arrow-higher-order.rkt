@@ -263,7 +263,8 @@
                                                               blame-party-info
                                                               neg-party
                                                               (list rng-checker)
-                                                              inner-stx-gen)
+                                                              inner-stx-gen
+                                                              #'(cons blame neg-party))
                                    (inner-stx-gen #'())))]
                             [(basic-unsafe-return basic-unsafe-return/result-values-assumed)
                              (let ()
@@ -328,7 +329,8 @@
                                                                     blame-party-info
                                                                     neg-party
                                                                     (list rng-checker)
-                                                                    outer-stx-gen)
+                                                                    outer-stx-gen
+                                                                    #'(cons blame neg-party))
                                          (outer-stx-gen #'()))))])
 
                 ;; Arrow contract domain checking is instrumented
