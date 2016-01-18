@@ -301,7 +301,8 @@
                                       blame-party-info
                                       neg-party
                                       #'not-a-null
-                                      (λ (x) (inner-stx-gen x assume-result-values?)))
+                                      (λ (x) (inner-stx-gen x assume-result-values?))
+                                      #'(cons blame neg-party))
                                      (inner-stx-gen #'() assume-result-values?)))
                                (list (mk-return #f) (mk-return #t)))]
                             [kwd-return
