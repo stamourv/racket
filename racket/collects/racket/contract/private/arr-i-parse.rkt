@@ -56,7 +56,7 @@ code does the parsing and validation of the syntax.
 ;;         'bool => #:pre or #:post
 (struct pre/post (vars kind exp quoted-dep-src-code) #:transparent)
 
-(define (parse-->i stx)
+(define (parse-->i stx maybe-this-param)
   (if (identifier? stx)
       (raise-syntax-error #f "expected ->i to follow an open parenthesis" stx)
       (let-values ([(is-chaperone-contract?
@@ -65,7 +65,10 @@ code does the parsing and validation of the syntax.
                     (pull-out-pieces stx)])
         (let ([candidate
                (istx is-chaperone-contract?
-                     (append (parse-doms stx #f raw-mandatory-doms)
+                     (append (if maybe-this-param
+                                 (list (arg (cadr (syntax->list maybe-this-param)) #f #'any/c #f #f #f))
+                                 '())
+                             (parse-doms stx #f raw-mandatory-doms)
                              (parse-doms stx #t raw-optional-doms))
                      id/rest-id
                      pre-cond

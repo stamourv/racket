@@ -48,8 +48,8 @@
 (define-syntax (->im stx)
   (syntax-case stx ()
     [(_ . args)
-     (->i-internal (syntax/loc stx (->im . args))
-                   #|method?|# #t)]))
+     (->i-internal (syntax/loc stx (->im . args)) ;; TODO test that ->im prints as such
+                   #|maybe-this-param|# #'#'this-param)]))
 
 (define-syntax (->dm stx)
   (syntax-case stx ()

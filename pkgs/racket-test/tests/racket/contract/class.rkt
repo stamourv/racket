@@ -1920,8 +1920,8 @@
 
   (test/spec-passed
    '->im-first-order-1
-   '(contract (class/c [pop (->im () #:pre () (not (send this empty?)) [_ number?])]
-                       [push (->im ([arg number?]) [_ void?] #:post () (not (send this empty?)))]
+   '(contract (class/c [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
+                       [push (->im ([arg number?]) [_ void?] #:post (this) (not (send this empty?)))]
                        [empty? (->m boolean?)])
               (class object% (super-new)
                 (define stack null)
@@ -1933,8 +1933,8 @@
 
   (test/pos-blame
    '->im-first-order-2
-   '(contract (class/c [pop (->im () #:pre () (not (send this empty?)) [_ number?])]
-                       [push (->im ([arg number?]) [_ void?] #:post () (not (send this empty?)))]
+   '(contract (class/c [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
+                       [push (->im ([arg number?]) [_ void?] #:post (this) (not (send this empty?)))]
                        [empty? (->m boolean?)])
               (class object% (super-new)
                 (define stack null)
@@ -1947,9 +1947,9 @@
   (test/spec-passed
    '->im-higher-order-1
    '(let* ([stack% (contract (class/c
-                              [pop (->im () #:pre () (not (send this empty?)) [_ number?])]
+                              [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
                               [push (->im ([arg number?]) [_ void?]
-                                          #:post () (not (send this empty?)))]
+                                          #:post (this) (not (send this empty?)))]
                               [empty? (->m boolean?)])
                              (class object% (super-new)
                                (define stack null)
@@ -1967,9 +1967,9 @@
   (test/pos-blame
    '->im-higher-order-2
    '(let* ([stack% (contract (class/c
-                              [pop (->im () #:pre () (not (send this empty?)) [_ number?])]
+                              [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
                               [push (->im ([arg number?]) [_ void?]
-                                          #:post () (not (send this empty?)))]
+                                          #:post (this) (not (send this empty?)))]
                               [empty? (->m boolean?)])
                              (class object% (super-new)
                                (define stack null)
@@ -1990,8 +1990,8 @@
    '->im-higher-order-3
    '(let* ([stack% (contract
                     (class/c
-                     [pop (->im () #:pre () (not (send this empty?)) [_ number?])]
-                     [push (->im ([arg number?]) [_ void?] #:post () (not (send this empty?)))]
+                     [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
+                     [push (->im ([arg number?]) [_ void?] #:post (this) (not (send this empty?)))]
                      [empty? (->m boolean?)])
                     (class object% (super-new)
                       (define stack null)
@@ -2002,6 +2002,42 @@
                     'neg)]
            [o (new stack%)])
       (send o pop)))
+
+  (test/neg-blame
+   '->im-higher-order-4
+   '(let* ([stack% (contract
+                    (class/c
+                     [pop (->im () #:pre (this) (not (send this empty?)) [_ number?])]
+                     [push (->im ([arg (this) (lambda (x) (and (number? x) (send this empty?)))]) [_ void?] #:post (this) (not (send this empty?)))]
+                     [empty? (->m boolean?)])
+                    (class object% (super-new)
+                      (define stack null)
+                      (define/public (empty?) (null? stack))
+                      (define/public (push v) (set! stack (cons v stack)))
+                      (define/public (pop) (let ([res (car stack)]) (set! stack (cdr stack)) res)))
+                    'pos
+                    'neg)]
+           [o (new stack%)])
+      (send o pop)))
+
+  (test/spec-passed/result
+   '->im-nested-class
+   '(with-output-to-string
+      (lambda ()
+        (send (contract (class/c [p (->im ([x (this) (lambda (x2)
+                                                       (and (send this n)
+                                                            (send (new (class% object% (super-new)
+                                                                               (define/public (m) (send this n))
+                                                                               (define/public (n) (printf "17\n") #t)))
+                                                                  m)))])
+                                          any)])
+                        (class object% (super-new)
+                          (define/public (n) (printf "8\n") #t)
+                          (define/public (p) #t))
+                        'pos
+                        'neg)
+              p)))
+   "8\n17\n")
 
   (test/spec-passed
    'case->m-first-order-1

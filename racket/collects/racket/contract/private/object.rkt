@@ -100,7 +100,7 @@
        [(->* . args)      #'(->*m . args)]
        [(->d . args)      #'(->dm . args)]
        [(case-> case ...) #'(case->m case ...)]
-       [(->i . args)      (->i-internal #'ctc #|method?|# #t)])])) ; there's no ->im. could be, though, code is there
+       [(->i . args)      (->i-internal #'ctc #|maybe-this-param|# #'#'this-param)])])) ; there's no ->im. could be, though, code is there ; TODO fix that
 
 (define (build-object-contract methods method-ctcs fields field-ctcs)
   (make-object-contract methods 

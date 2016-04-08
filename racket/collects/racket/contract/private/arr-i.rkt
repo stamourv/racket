@@ -865,7 +865,7 @@ evaluted left-to-right.)
     (generate-temporaries (map arg/res-var ordered-ress)))
 
   
-  (define this-param (and method? (car (generate-temporaries '(this)))))
+  (define this-param (and method? (car (generate-temporaries '(this))))) ; TODO don't want this anymore. want to handle upstream
   
   (define wrapper-body
     (add-wrapper-let 
@@ -1139,10 +1139,12 @@ evaluted left-to-right.)
 (define-syntax (->i/m stx)
   (syntax-case stx ()
     [(_ . args)
-     (->i-internal (syntax/loc stx (->i . args)) #|method?|# #f)]))
+     (->i-internal (syntax/loc stx (->i . args)) #|maybe-this-param|# #f)]))
 
-(define-for-syntax (->i-internal stx method?)
-  (define an-istx (parse-->i stx))
+(define-for-syntax (->i-internal stx maybe-this-param) ; non-#f is creating an ->dm
+  (define method? (and maybe-this-param #t))
+  (define an-istx (parse-->i stx maybe-this-param))
+  (printf "an-istx = ~a\n" an-istx) ;; TODO
   (define used-indy-vars (mk-used-indy-vars an-istx))
   (define-values (blame-ids wrapper-func) (mk-wrapper-func/blame-id-info stx an-istx used-indy-vars method?))
   (define val-first-wrapper-func (mk-val-first-wrapper-func/blame-id-info an-istx used-indy-vars method?))
@@ -1208,164 +1210,191 @@ evaluted left-to-right.)
         ans))
 
     (define is-chaperone-contract? (istx-is-chaperone-contract? an-istx))
-    
-    #`(let ([arg-exp-xs (coerce-contract '->i arg-exps)] ...
-            [res-exp-xs (coerce-contract '->i res-exps)] ...)
-        #,(syntax-property
-           #`(make-->i
-              #,is-chaperone-contract?
-              ;; the information needed to make the blame records and their new contexts
-              '#,blame-ids
-              ;; all of the non-dependent argument contracts
-              (list (->i-arg 'arg-names 'arg-kwds arg-is-optional?s arg-exp-xs) ...)
-              ;; all of the dependent argument contracts
-              (list #,@(for/list ([arg (in-list args+rst)]
-                                  #:when (arg/res-vars arg))
-                         (define orig-vars (find-orig-vars (arg/res-vars arg) args+rst))
-                         (define ctc-stx
-                           (syntax-property
-                            (syntax-property 
-                             (arg/res-ctc arg)
-                             'racket/contract:negative-position 
-                             this->i)
-                            'racket/contract:contract-on-boundary
-                            (gensym '->i-indy-boundary)))
-                         #`(λ (#,@orig-vars val blame neg-party)
-                             #,@(arg/res-vars arg)
-                             ;; this used to use opt/direct, but 
-                             ;; opt/direct duplicates code (bad!)
-                             (#,(if is-chaperone-contract? #'un-dep/chaperone #'un-dep)
-                              #,ctc-stx val blame neg-party))))
-              ;; then the non-dependent argument contracts that are themselves dependend on
-              (list #,@(filter values
-                               (map (λ (arg/res indy-id) 
-                                      (and (free-identifier-mapping-get used-indy-vars
-                                                                        (arg/res-var arg/res)
-                                                                        (λ () #f))
-                                           #`(cons '#,(arg/res-var arg/res) #,indy-id)))
-                                    (filter (λ (arg/res) (not (arg/res-vars arg/res))) args+rst)
-                                    (syntax->list #'(arg-exp-xs ...)))))
-              
-              
-              #,(if (istx-ress an-istx)
-                    #`(list (cons 'res-names res-exp-xs) ...)
-                    #''())
-              #,(if (istx-ress an-istx) 
-                    #`(list #,@(for/list ([arg (in-list 
-                                                (istx-ress an-istx))]
-                                          #:when (arg/res-vars arg))
-                                 (define orig-vars 
-                                   (find-orig-vars (arg/res-vars arg) args+rst+results))
-                                 (define arg-stx
-                                   (syntax-property
-                                    (syntax-property 
-                                     (arg/res-ctc arg)
-                                     'racket/contract:positive-position
-                                     this->i)
-                                    'racket/contract:contract-on-boundary 
-                                    (gensym '->i-indy-boundary)))
-                                 (if (eres? arg)
-                                     #`(λ #,orig-vars
-                                         #,@(arg/res-vars arg)
-                                         (opt/c #,arg-stx))
-                                     #`(λ (#,@orig-vars val blame neg-party)
-                                         ;; this used to use opt/direct, but 
-                                         ;; opt/direct duplicates code (bad!)
-                                         #,@(arg/res-vars arg)
-                                         (#,(if is-chaperone-contract? #'un-dep/chaperone #'un-dep)
-                                          #,arg-stx val blame neg-party)))))
-                    #''())
-              #,(if (istx-ress an-istx)
-                    #`(list #,@(filter values
-                                       (map (λ (arg/res indy-id) 
-                                              (and (free-identifier-mapping-get used-indy-vars 
-                                                                                (arg/res-var arg/res)
-                                                                                (λ () #f))
-                                                   #`(cons '#,(arg/res-var arg/res) #,indy-id)))
-                                            (filter (λ (arg/res) 
-                                                      (not (arg/res-vars arg/res)))
-                                                    (istx-ress an-istx))
-                                            (syntax->list #'(res-exp-xs ...)))))
-                    #''())
-              
-              #,(let ([func (λ (pre/post vars-to-look-in)
-                              (define orig-vars (find-orig-vars (pre/post-vars pre/post)
-                                                                vars-to-look-in))
-                              #`(λ #,orig-vars
-                                  (void #,@(pre/post-vars pre/post))
-                                  #,(pre/post-exp pre/post)))])
-                  #`(list #,@(for/list ([pre (in-list (istx-pre an-istx))])
-                               (func pre args+rst))
-                          #,@(for/list ([post (in-list (istx-post an-istx))])
-                               (func post args+rst+results))))
-              
-              #,(length (filter values (map (λ (arg) (and (not (arg-kwd arg)) 
-                                                          (not (arg-optional? arg))))
-                                            (istx-args an-istx))))
-              #,(length (filter values (map (λ (arg) (and (not (arg-kwd arg)) (arg-optional? arg)))
-                                            (istx-args an-istx))))
-              '#,(sort (filter values (map (λ (arg) (and (not (arg-optional? arg)) 
-                                                         (arg-kwd arg) 
-                                                         (syntax-e (arg-kwd arg))))
-                                           (istx-args an-istx))) 
-                       keyword<?)
-              '#,(sort (filter values (map (λ (arg) (and (arg-optional? arg)
-                                                         (arg-kwd arg)
-                                                         (syntax-e (arg-kwd arg))))
-                                           (istx-args an-istx))) 
-                       keyword<?)
-              '#,(and (istx-rst an-istx) (arg/res-var (istx-rst an-istx)))
-              #,method?
-              (quote-module-name)
-              #,wrapper-func
-              #,val-first-wrapper-func
-              '#(#,(for/list ([an-arg (in-list (istx-args an-istx))])
-                     `(,(if (arg/res-vars an-arg) 'dep 'nodep)
-                       ,(syntax-e (arg/res-var an-arg)) 
-                       ,(if (arg/res-vars an-arg)
-                            (map syntax-e (arg/res-vars an-arg))
-                            '())
-                       ,(and (arg-kwd an-arg)
-                             (syntax-e (arg-kwd an-arg)))
-                       ,(arg-optional? an-arg)
-                       ,(arg/res-quoted-dep-src-code an-arg)))
-                 #,(if (istx-rst an-istx)
-                       (if (arg/res-vars (istx-rst an-istx))
-                           `(dep ,(syntax-e (arg/res-var (istx-rst an-istx)))
-                                 ,(map syntax-e (arg/res-vars (istx-rst an-istx)))
-                                 ,(arg/res-quoted-dep-src-code (istx-rst an-istx)))
-                           `(nodep ,(syntax-e (arg/res-var (istx-rst an-istx)))))
-                       #f)
-                 #,(for/list ([pre (in-list (istx-pre an-istx))])
-                     (list (map syntax-e (pre/post-vars pre))
-                           (pre/post-kind pre)
-                           (pre/post-quoted-dep-src-code pre)))
-                 #,(and (istx-ress an-istx)
-                        (for/list ([a-res (in-list (istx-ress an-istx))])
-                          `(,(if (arg/res-vars a-res) 'dep 'nodep)
-                            ,(if (eres? a-res)
-                                 '_
-                                 (syntax-e (arg/res-var a-res)))
-                            ,(if (arg/res-vars a-res)
-                                 (map syntax-e (arg/res-vars a-res))
-                                 '())
-                            #f
-                            #f
-                            ,(arg/res-quoted-dep-src-code a-res))))
-                 #,(for/list ([post (in-list (istx-post an-istx))])
-                     (list (map syntax-e (pre/post-vars post))
-                           (pre/post-kind post)
-                           (pre/post-quoted-dep-src-code post)))))
-           'racket/contract:contract 
-           (let ()
-             (define (find-kwd kwd)
-               (for/or ([x (in-list (syntax->list stx))])
-                 (and (eq? (syntax-e x) kwd)
-                      x)))
-             (define pre (find-kwd '#:pre))
-             (define post (find-kwd '#:post))
-             (define orig (list (car (syntax-e stx))))
-             (vector this->i 
-                     ;; the ->i in the original input to this guy
-                     (if post (cons post orig) orig)
-                     (if pre (list pre) '())))))))
+
+    (with-syntax ([(this-parameter ...)
+                   (if maybe-this-param
+                       (generate-temporaries '(this))
+                       null)])
+      #`(let-syntax ([parameterize-this ; for `->im`, set up the `this` parameter. similar code in `->d`
+                      (let ([old-param #,maybe-this-param])
+                        (λ (stx)
+                          (syntax-case stx ()
+                            [(_ body) #'body]
+                            [(_ id body)
+                             (if (syntax? old-param)
+                                 (with-syntax ([param old-param])
+                                   (syntax/loc stx
+                                     (syntax-parameterize
+                                      ([param (make-this-transformer #'id)])
+                                      body)))
+                                 #'body)])))])
+          (let ([arg-exp-xs (coerce-contract '->i arg-exps)] ...
+                [res-exp-xs (coerce-contract '->i res-exps)] ...)
+            #,(syntax-property
+               #`(make-->i
+                  #,is-chaperone-contract?
+                  ;; the information needed to make the blame records and their new contexts
+                  '#,blame-ids
+                  ;; all of the non-dependent argument contracts
+                  (list (parameterize-this this-parameter ... (->i-arg 'arg-names 'arg-kwds arg-is-optional?s arg-exp-xs)) ...)
+                  ;; all of the dependent argument contracts
+                  (list #,@(for/list ([arg (in-list args+rst)]
+                                      #:when (arg/res-vars arg))
+                             (define orig-vars (find-orig-vars (arg/res-vars arg) args+rst))
+                             (define ctc-stx
+                               (syntax-property
+                                (syntax-property 
+                                 (arg/res-ctc arg)
+                                 'racket/contract:negative-position 
+                                 this->i)
+                                'racket/contract:contract-on-boundary
+                                (gensym '->i-indy-boundary)))
+                             #`(parameterize-this
+                                this-parameter ...
+                                (λ (#,@orig-vars val blame neg-party)
+                                  #,@(arg/res-vars arg)
+                                  ;; this used to use opt/direct, but 
+                                  ;; opt/direct duplicates code (bad!)
+                                  (#,(if is-chaperone-contract? #'un-dep/chaperone #'un-dep)
+                                   #,ctc-stx val blame neg-party)))))
+                  ;; then the non-dependent argument contracts that are themselves dependend on
+                  (list #,@(filter values
+                                   (map (λ (arg/res indy-id) 
+                                          (and (free-identifier-mapping-get used-indy-vars
+                                                                            (arg/res-var arg/res)
+                                                                            (λ () #f))
+                                               #`(parameterize-this
+                                                  this-parameter ...
+                                                  (cons '#,(arg/res-var arg/res) #,indy-id))))
+                                        (filter (λ (arg/res) (not (arg/res-vars arg/res))) args+rst)
+                                        (syntax->list #'(arg-exp-xs ...)))))
+                  
+                  
+                  #,(if (istx-ress an-istx)
+                        #`(list (parameterize-this this-parameter ... (cons 'res-names res-exp-xs)) ...)
+                        #''())
+                  #,(if (istx-ress an-istx) 
+                        #`(list #,@(for/list ([arg (in-list 
+                                                    (istx-ress an-istx))]
+                                              #:when (arg/res-vars arg))
+                                     (define orig-vars 
+                                       (find-orig-vars (arg/res-vars arg) args+rst+results))
+                                     (define arg-stx
+                                       (syntax-property
+                                        (syntax-property 
+                                         (arg/res-ctc arg)
+                                         'racket/contract:positive-position
+                                         this->i)
+                                        'racket/contract:contract-on-boundary 
+                                        (gensym '->i-indy-boundary)))
+                                     #`(parameterize-this
+                                        this-parameter ...
+                                        #,(if (eres? arg)
+                                              #`(λ #,orig-vars
+                                                  #,@(arg/res-vars arg)
+                                                  (opt/c #,arg-stx))
+                                              #`(λ (#,@orig-vars val blame neg-party)
+                                                  ;; this used to use opt/direct, but 
+                                                  ;; opt/direct duplicates code (bad!)
+                                                  #,@(arg/res-vars arg)
+                                                  (#,(if is-chaperone-contract? #'un-dep/chaperone #'un-dep)
+                                                   #,arg-stx val blame neg-party))))))
+                        #''())
+                  #,(if (istx-ress an-istx)
+                        #`(list #,@(filter values
+                                           (map (λ (arg/res indy-id) 
+                                                  (and (free-identifier-mapping-get used-indy-vars 
+                                                                                    (arg/res-var arg/res)
+                                                                                    (λ () #f))
+                                                       #`(parameterize-this
+                                                          this-parameter ...
+                                                          (cons '#,(arg/res-var arg/res) #,indy-id))))
+                                                (filter (λ (arg/res) 
+                                                          (not (arg/res-vars arg/res)))
+                                                        (istx-ress an-istx))
+                                                (syntax->list #'(res-exp-xs ...)))))
+                        #''())
+                  
+                  #,(let ([func (λ (pre/post vars-to-look-in)
+                                  (define orig-vars (find-orig-vars (pre/post-vars pre/post)
+                                                                    vars-to-look-in))
+                                  #`(parameterize-this
+                                     this-parameter ...
+                                     (λ #,orig-vars
+                                       (void #,@(pre/post-vars pre/post))
+                                       #,(pre/post-exp pre/post))))])
+                      #`(list #,@(for/list ([pre (in-list (istx-pre an-istx))])
+                                   (func pre args+rst))
+                              #,@(for/list ([post (in-list (istx-post an-istx))])
+                                   (func post args+rst+results))))
+                  
+                  #,(length (filter values (map (λ (arg) (and (not (arg-kwd arg)) 
+                                                              (not (arg-optional? arg))))
+                                                (istx-args an-istx))))
+                  #,(length (filter values (map (λ (arg) (and (not (arg-kwd arg)) (arg-optional? arg)))
+                                                (istx-args an-istx))))
+                  '#,(sort (filter values (map (λ (arg) (and (not (arg-optional? arg)) 
+                                                             (arg-kwd arg) 
+                                                             (syntax-e (arg-kwd arg))))
+                                               (istx-args an-istx))) 
+                           keyword<?)
+                  '#,(sort (filter values (map (λ (arg) (and (arg-optional? arg)
+                                                             (arg-kwd arg)
+                                                             (syntax-e (arg-kwd arg))))
+                                               (istx-args an-istx))) 
+                           keyword<?)
+                  '#,(and (istx-rst an-istx) (arg/res-var (istx-rst an-istx)))
+                  #,method?
+                  (quote-module-name)
+                  #,wrapper-func
+                  #,val-first-wrapper-func
+                  '#(#,(for/list ([an-arg (in-list (istx-args an-istx))])
+                         `(,(if (arg/res-vars an-arg) 'dep 'nodep)
+                           ,(syntax-e (arg/res-var an-arg)) 
+                           ,(if (arg/res-vars an-arg)
+                                (map syntax-e (arg/res-vars an-arg))
+                                '())
+                           ,(and (arg-kwd an-arg)
+                                 (syntax-e (arg-kwd an-arg)))
+                           ,(arg-optional? an-arg)
+                           ,(arg/res-quoted-dep-src-code an-arg)))
+                     #,(if (istx-rst an-istx)
+                           (if (arg/res-vars (istx-rst an-istx))
+                               `(dep ,(syntax-e (arg/res-var (istx-rst an-istx)))
+                                     ,(map syntax-e (arg/res-vars (istx-rst an-istx)))
+                                     ,(arg/res-quoted-dep-src-code (istx-rst an-istx)))
+                               `(nodep ,(syntax-e (arg/res-var (istx-rst an-istx)))))
+                           #f)
+                     #,(for/list ([pre (in-list (istx-pre an-istx))])
+                         (list (map syntax-e (pre/post-vars pre))
+                               (pre/post-kind pre)
+                               (pre/post-quoted-dep-src-code pre)))
+                     #,(and (istx-ress an-istx)
+                            (for/list ([a-res (in-list (istx-ress an-istx))])
+                              `(,(if (arg/res-vars a-res) 'dep 'nodep)
+                                ,(if (eres? a-res)
+                                     '_
+                                     (syntax-e (arg/res-var a-res)))
+                                ,(if (arg/res-vars a-res)
+                                     (map syntax-e (arg/res-vars a-res))
+                                     '())
+                                #f
+                                #f
+                                ,(arg/res-quoted-dep-src-code a-res))))
+                     #,(for/list ([post (in-list (istx-post an-istx))])
+                         (list (map syntax-e (pre/post-vars post))
+                               (pre/post-kind post)
+                               (pre/post-quoted-dep-src-code post)))))
+               'racket/contract:contract 
+               (let ()
+                 (define (find-kwd kwd)
+                   (for/or ([x (in-list (syntax->list stx))])
+                     (and (eq? (syntax-e x) kwd)
+                          x)))
+                 (define pre (find-kwd '#:pre))
+                 (define post (find-kwd '#:post))
+                 (define orig (list (car (syntax-e stx))))
+                 (vector this->i 
+                         ;; the ->i in the original input to this guy
+                         (if post (cons post orig) orig)
+                         (if pre (list pre) '())))))))))
